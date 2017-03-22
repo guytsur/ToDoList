@@ -13,11 +13,26 @@ import android.widget.EditText;
 import android.widget.ListView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     private ListView mainListView ;
     private ArrayAdapter<String> listAdapter ;
+
+    public void onSaveInstanceState(Bundle savedState) {
+
+        super.onSaveInstanceState(savedState);
+
+        // Note: getValues() is a method in your ArrayAdapter subclass
+        ArrayList<String> values = new ArrayList<String>();
+        for (int i=0;i<listAdapter.getCount();i++){
+            values.add(listAdapter.getItem(i));
+        }
+        savedState.putStringArrayList("savedList", values);
+
+    }
+
 
 
     @Override
@@ -35,6 +50,15 @@ public class MainActivity extends AppCompatActivity {
         listAdapter = new ArrayAdapter<String>(this, R.layout.simplerow, todoList);
         mainListView.setAdapter( listAdapter );
 
+        if (savedInstanceState != null) {
+            ArrayList<String> values = savedInstanceState.getStringArrayList("savedList");
+            if (values != null) {
+                for (int i = 0; i < values.size() ;i++){
+                    listAdapter.add(values.get(i));
+                    mainListView.setSelection(listAdapter.getCount() - 1);
+                }
+            }
+        }
         final Context context = this;
 
         mainListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -84,6 +108,8 @@ public class MainActivity extends AppCompatActivity {
                 mainListView.setSelection(listAdapter.getCount() - 1);
             }
         });
+
+
 
     }
 }
