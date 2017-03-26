@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.net.Uri;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
@@ -12,6 +13,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.PopupMenu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -26,8 +28,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ListView mainListView ;
     private ArrayAdapter<String> listAdapter ;
-    private int NumOfOptionsOnClick = 2;
-    private CharSequence[] options = new CharSequence[NumOfOptionsOnClick];
+    String job;
 
     public void onSaveInstanceState(Bundle savedState) {
 
@@ -77,38 +78,37 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> arg0, View view, final int pos, long id) {
 
-                String job = todoList.get(pos);
+                job = todoList.get(pos);
+                PopupMenu popupMenu = new PopupMenu(MainActivity.this,view);
 
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle(job);
-                builder.setCancelable(true);
-                builder.setNeutralButton("Delete", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        todoList.remove(pos);
-                        listAdapter.notifyDataSetChanged();
-
-                    }
-                });
                 if (job.startsWith("Call") == true){
-                 builder.setNeutralButton("Call", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent callIntent = new Intent(Intent.ACTION_CALL);
-                        callIntent.setData(Uri.parse("tel:0377778888"));
-
-                        if (ActivityCompat.checkSelfPermission(MainActivity.this,
-                                Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-                            return;
-                        }
-                        startActivity(callIntent);
-                    }
-                });
-
+                    popupMenu.getMenuInflater().inflate(R.menu.popup_menu_with_call,popupMenu.getMenu());
+                }
+                else{
+                    popupMenu.getMenuInflater().inflate(R.menu.popup_menu,popupMenu.getMenu());
                 }
 
-                builder.show();
+
+                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem menuItem) {
+                        switch(menuItem.getItemId()){
+                            // Handle the non group menu items here
+                            case R.id.delete_button:
+                                todoList.remove(pos);
+                                listAdapter.notifyDataSetChanged();
+
+                            case R.id.call_button:
+                                Intent intent = new Intent(Intent.ACTION_DIAL);
+                                intent.setData(Uri.parse("tel:" + job.split(" ")[1]));
+                                startActivity(intent);
+
+                            default:
+                                return false;
+                        }
+                    }
+                });
+                popupMenu.show();
             }
         });
 
