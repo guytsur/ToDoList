@@ -1,16 +1,23 @@
 package guytsur.todolistmanager;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.PopupMenu;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +26,8 @@ public class MainActivity extends AppCompatActivity {
 
     private ListView mainListView ;
     private ArrayAdapter<String> listAdapter ;
+    private int NumOfOptionsOnClick = 2;
+    private CharSequence[] options = new CharSequence[NumOfOptionsOnClick];
 
     public void onSaveInstanceState(Bundle savedState) {
 
@@ -45,6 +54,8 @@ public class MainActivity extends AppCompatActivity {
         final EditText userInput = (EditText) findViewById(R.id.userInput);
         mainListView = (ListView) findViewById(R.id.mainListView);
 
+
+
         //init array
         final ArrayList<String> todoList = new ArrayList<String>();
         listAdapter = new ArrayAdapter<String>(this, R.layout.simplerow, todoList);
@@ -61,6 +72,47 @@ public class MainActivity extends AppCompatActivity {
         }
         final Context context = this;
 
+
+        mainListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> arg0, View view, final int pos, long id) {
+
+                String job = todoList.get(pos);
+
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle(job);
+                builder.setCancelable(true);
+                builder.setNeutralButton("Delete", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        todoList.remove(pos);
+                        listAdapter.notifyDataSetChanged();
+
+                    }
+                });
+                if (job.startsWith("Call") == true){
+                 builder.setNeutralButton("Call", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent callIntent = new Intent(Intent.ACTION_CALL);
+                        callIntent.setData(Uri.parse("tel:0377778888"));
+
+                        if (ActivityCompat.checkSelfPermission(MainActivity.this,
+                                Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                            return;
+                        }
+                        startActivity(callIntent);
+                    }
+                });
+
+                }
+
+                builder.show();
+            }
+        });
+
+
         mainListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
@@ -75,7 +127,6 @@ public class MainActivity extends AppCompatActivity {
                         .setTitle("Deleting a Job")
                         .setTitle(job)
                         .setMessage("Are you sure you want to delete this job?")
-                        .setCancelable(false)
                         .setPositiveButton("Yes",new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog,int id) {
                                 // if this button is clicked, close
@@ -103,6 +154,8 @@ public class MainActivity extends AppCompatActivity {
 
         addButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                listAdapter.add("Fuck yeah");
+                listAdapter.add("Call +200");
                 String text = userInput.getText().toString();
                 listAdapter.add(text);
                 mainListView.setSelection(listAdapter.getCount() - 1);
