@@ -1,12 +1,17 @@
 package guytsur.todolistmanager;
 
 import android.Manifest;
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.icu.text.SimpleDateFormat;
+import android.icu.util.Calendar;
 import android.net.Uri;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
@@ -17,18 +22,22 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
     private ListView mainListView ;
     private ArrayAdapter<String> listAdapter ;
     String job;
+
 
     public void onSaveInstanceState(Bundle savedState) {
 
@@ -153,12 +162,76 @@ public class MainActivity extends AppCompatActivity {
         });
 
         addButton.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
             public void onClick(View v) {
                 listAdapter.add("Fuck yeah");
                 listAdapter.add("Call +200");
-                String text = userInput.getText().toString();
-                listAdapter.add(text);
-                mainListView.setSelection(listAdapter.getCount() - 1);
+
+                final EditText edittext = new EditText(MainActivity.this);
+                final EditText date_text = new EditText(MainActivity.this);
+
+                LinearLayout layout = new LinearLayout(context);
+                layout.setOrientation(LinearLayout.VERTICAL);
+
+                edittext.setHint("Job");
+                layout.addView(edittext);
+
+                date_text.setHint("Date");
+                date_text.setFocusable(false);
+                layout.addView(date_text);
+
+                final Calendar myCalendar = Calendar.getInstance();
+
+                final DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {
+
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int monthOfYear,
+                                          int dayOfMonth) {
+                        // TODO Auto-generated method stub
+                        myCalendar.set(Calendar.YEAR, year);
+                        myCalendar.set(Calendar.MONTH, monthOfYear);
+                        myCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+
+                        String myFormat = "dd/MM/yy"; //In which you need put here
+                        SimpleDateFormat sdf = new SimpleDateFormat(myFormat, Locale.US);
+                        date_text.setText(sdf.format(myCalendar.getTime()));
+                    }
+
+                };
+                date_text.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        // TODO Auto-generated method stub
+                        new DatePickerDialog(MainActivity.this, date, myCalendar
+                                .get(Calendar.YEAR), myCalendar.get(Calendar.MONTH),
+                                myCalendar.get(Calendar.DAY_OF_MONTH)).show();
+                    }
+                });
+
+
+
+                AlertDialog.Builder adb = new AlertDialog.Builder(context);
+                // set dialog message
+                adb
+                        .setView(layout)
+                        .setTitle("New Job")
+                        .setPositiveButton("Create",new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,int id) {
+                                listAdapter.add(edittext.getText().toString());
+                                mainListView.setSelection(listAdapter.getCount() - 1);
+                            }
+                        })
+                        .setNegativeButton("Cancel",new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,int id) {
+                                // if this button is clicked, just close
+                                // the dialog box and do nothing
+                                dialog.cancel();
+                            }
+                        });
+                // create alert dialog
+                AlertDialog alertDialog = adb.create();
+                // show it
+                alertDialog.show();
             }
         });
 
