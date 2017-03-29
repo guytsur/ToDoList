@@ -27,6 +27,7 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String JOB_DATE_SEP = " @ ";
     private ListView mainListView ;
     private ArrayAdapter<String> listAdapter ;
     String job;
@@ -100,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
 
                             case R.id.call_button:
                                 Intent intent = new Intent(Intent.ACTION_DIAL);
-                                intent.setData(Uri.parse("tel:" + job.split(" ")[1]));
+                                intent.setData(Uri.parse("tel:" + job.split(" ")[1].split(JOB_DATE_SEP)[0]));
                                 startActivity(intent);
 
                             default:
@@ -155,8 +156,8 @@ public class MainActivity extends AppCompatActivity {
         addButton.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.N)
             public void onClick(View v) {
-                listAdapter.add("Fuck yeah");
-                listAdapter.add("Call +200");
+                //listAdapter.add("Fuck yeah @ 11/11/11");
+                //listAdapter.add("Call +200 @ 11/11/11");
 
                 final EditText edittext = new EditText(MainActivity.this);
                 final EditText date_text = new EditText(MainActivity.this);
@@ -208,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
                         .setTitle("New Job")
                         .setPositiveButton("Create",new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog,int id) {
-                                listAdapter.add(edittext.getText().toString());
+                                listAdapter.add(edittext.getText().toString() + JOB_DATE_SEP + date_text.getText().toString());
                                 mainListView.setSelection(listAdapter.getCount() - 1);
                             }
                         })
