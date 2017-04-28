@@ -4,6 +4,7 @@ import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.icu.text.SimpleDateFormat;
 import android.icu.util.Calendar;
 import android.net.Uri;
@@ -27,7 +28,9 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
+
     private static final String JOB_DATE_SEP = " @ ";
+    DatabaseHelper mDatabaseHelper;
     private ListView mainListView ;
     private ArrayAdapter<String> listAdapter ;
     String job;
@@ -56,15 +59,23 @@ public class MainActivity extends AppCompatActivity {
         FloatingActionButton addButton = (FloatingActionButton) findViewById(R.id.addButton);
         mainListView = (ListView) findViewById(R.id.mainListView);
 
-
-
         //init array
         final ArrayList<String> todoList = new ArrayList<String>();
         listAdapter = new ArrayAdapter<String>(this, R.layout.simplerow, todoList);
         mainListView.setAdapter( listAdapter );
 
+        //init SQL db
+        mDatabaseHelper = new DatabaseHelper(this);
+
         if (savedInstanceState != null) {
-            ArrayList<String> values = savedInstanceState.getStringArrayList("savedList");
+            //ArrayList<String> values = savedInstanceState.getStringArrayList("savedList");
+            Cursor data = mDatabaseHelper.getData();
+            ArrayList<String> values= new ArrayList<>();
+            while(data.moveToNext()){
+                //get the value from the database in column 1
+                //then add it to the ArrayList
+                values.add(data.getString(1));
+            }
             if (values != null) {
                 for (int i = 0; i < values.size() ;i++){
                     listAdapter.add(values.get(i));
@@ -209,6 +220,7 @@ public class MainActivity extends AppCompatActivity {
                         .setTitle("New Job")
                         .setPositiveButton("Create",new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog,int id) {
+                                mDatabaseHelper.addData(edittext.getText().toString() + JOB_DATE_SEP + date_text.getText().toString());
                                 listAdapter.add(edittext.getText().toString() + JOB_DATE_SEP + date_text.getText().toString());
                                 mainListView.setSelection(listAdapter.getCount() - 1);
                             }
