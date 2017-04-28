@@ -4,7 +4,6 @@ import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.icu.text.SimpleDateFormat;
 import android.icu.util.Calendar;
 import android.net.Uri;
@@ -15,6 +14,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.PopupMenu;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -23,17 +23,28 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.GenericTypeIndicator;
+import com.google.firebase.database.ValueEventListener;
+
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Locale;
 
+
 public class MainActivity extends AppCompatActivity {
 
-
     private static final String JOB_DATE_SEP = " @ ";
-    DatabaseHelper mDatabaseHelper;
     private ListView mainListView ;
     private ArrayAdapter<String> listAdapter ;
     String job;
+    private DatabaseReference mDatabase;
+    private ArrayList<String> values;
+
 
     public void onSaveInstanceState(Bundle savedState) {
 
@@ -54,35 +65,50 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         setTitle("Guy's To Do List:");
         super.onCreate(savedInstanceState);
+        this.mDatabase = mDatabase = FirebaseDatabase.getInstance().getReference();
+
         setContentView(R.layout.activity_main);
         // Get Elements
         FloatingActionButton addButton = (FloatingActionButton) findViewById(R.id.addButton);
         mainListView = (ListView) findViewById(R.id.mainListView);
+
+
 
         //init array
         final ArrayList<String> todoList = new ArrayList<String>();
         listAdapter = new ArrayAdapter<String>(this, R.layout.simplerow, todoList);
         mainListView.setAdapter( listAdapter );
 
-        //init SQL db
-        mDatabaseHelper = new DatabaseHelper(this);
-
         if (savedInstanceState != null) {
-            //ArrayList<String> values = savedInstanceState.getStringArrayList("savedList");
-            Cursor data = mDatabaseHelper.getData();
-            ArrayList<String> values= new ArrayList<>();
-            while(data.moveToNext()){
-                //get the value from the database in column 1
-                //then add it to the ArrayList
-                values.add(data.getString(1));
+            Log.d("guyTag", "got instance");
+            values = savedInstanceState.getStringArrayList("savedList");
+
+        }
+        else{
+
+        Log.d("guyTag", "adding listener");
+        ValueEventListener ArrayListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // Get Post object and use the values to update the UI
+                GenericTypeIndicator<ArrayList<String>> t = new GenericTypeIndicator<ArrayList<String>>() {};
+                values = dataSnapshot.getValue(t);
             }
-            if (values != null) {
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
+        mDatabase.child("values").addListenerForSingleValueEvent(ArrayListener);
+
+        }
+        if (values != null) {
                 for (int i = 0; i < values.size() ;i++){
                     listAdapter.add(values.get(i));
                     mainListView.setSelection(listAdapter.getCount() - 1);
                 }
             }
-        }
         final Context context = this;
 
 
@@ -220,9 +246,15 @@ public class MainActivity extends AppCompatActivity {
                         .setTitle("New Job")
                         .setPositiveButton("Create",new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog,int id) {
-                                mDatabaseHelper.addData(edittext.getText().toString() + JOB_DATE_SEP + date_text.getText().toString());
-                                listAdapter.add(edittext.getText().toString() + JOB_DATE_SEP + date_text.getText().toString());
+                                String line = edittext.getText().toString() + JOB_DATE_SEP + date_text.getText().toString();
+                                listAdapter.add(line);
                                 mainListView.setSelection(listAdapter.getCount() - 1);
+
+                                Log.d("guyTag","writing...");
+                                mDatabase.child("values").child(String.valueOf(listAdapter.getCount())).setValue(line);
+
+
+
                             }
                         })
                         .setNegativeButton("Cancel",new DialogInterface.OnClickListener() {
@@ -238,6 +270,7 @@ public class MainActivity extends AppCompatActivity {
                 alertDialog.show();
             }
         });
+
 
 
 
