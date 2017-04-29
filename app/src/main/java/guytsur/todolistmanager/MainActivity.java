@@ -93,6 +93,12 @@ public class MainActivity extends AppCompatActivity {
                 // Get Post object and use the values to update the UI
                 GenericTypeIndicator<ArrayList<String>> t = new GenericTypeIndicator<ArrayList<String>>() {};
                 values = dataSnapshot.getValue(t);
+                if (values != null) {
+                for (int i = 0; i < values.size() ;i++){
+                    listAdapter.add(values.get(i));
+                    mainListView.setSelection(listAdapter.getCount() - 1);
+                }
+            }   Log.d("guyTag", values.toString());
             }
 
             @Override
@@ -101,14 +107,14 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         mDatabase.child("values").addListenerForSingleValueEvent(ArrayListener);
-
-        }
         if (values != null) {
                 for (int i = 0; i < values.size() ;i++){
                     listAdapter.add(values.get(i));
                     mainListView.setSelection(listAdapter.getCount() - 1);
                 }
             }
+        }
+
         final Context context = this;
 
 
@@ -247,11 +253,12 @@ public class MainActivity extends AppCompatActivity {
                         .setPositiveButton("Create",new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog,int id) {
                                 String line = edittext.getText().toString() + JOB_DATE_SEP + date_text.getText().toString();
-                                listAdapter.add(line);
-                                mainListView.setSelection(listAdapter.getCount() - 1);
 
                                 Log.d("guyTag","writing...");
                                 mDatabase.child("values").child(String.valueOf(listAdapter.getCount())).setValue(line);
+
+                                listAdapter.add(line);
+                                mainListView.setSelection(listAdapter.getCount());
 
 
 
